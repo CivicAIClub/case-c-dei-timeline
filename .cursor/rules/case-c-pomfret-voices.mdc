@@ -1,0 +1,35 @@
+---
+description: Project context for Case C Pomfret Voices (DEI timeline & archive) — client, stack, content sources, ethical guardrails, security, and build conventions
+alwaysApply: true
+---
+
+# Case C — Pomfret Voices (DEI Interactive Timeline & Digital Archive)
+
+## Client and purpose
+- **Client:** Dr. Coretta McCarter, Dean of DEI, Pomfret School. The DEI Department owns the content.
+- **Purpose:** a living public archive of diversity, equity, and inclusion at Pomfret (founded 1894): interactive timeline, Humans of Pomfret profiles, Heads of School, magazine archive viewers, Schwartz Visiting Fellows, bilingual QR campus tour, AI-bias module, and a protected admin QR generator. Companion to pomfret.org.
+
+## Team
+- Developers: Zahir Williams, Keke Li (Keke authored most of the 2026 build and the "Spirit That Is Pomfret" fact-check passes). Club lead: Cayden Auyang.
+
+## Stack and layout
+- Next.js 14.2 App Router + TypeScript + Tailwind 3 (Pomfret palette as CSS variables in `tailwind.config.ts` / `app/globals.css`) + Framer Motion via `LazyMotion`. Fonts: DM Serif Display + Poppins via `next/font/google`.
+- `app/` routes (see README route table) · `components/layout|ethics|seo|ui` · `lib/data/*.ts` hardcoded content (profiles, tour stops) · `lib/auth.ts`, `lib/rate-limit.ts`, `middleware.ts` admin session auth · `lib/sanity/` client, queries, schemas — **planned CMS, not wired**; importing `lib/sanity/client.ts` throws without env vars, so do not import it from pages · `docs/` audit, verification, photo-consent, design-token references · `scripts/hash-password.mjs`, `scripts/auth-sanity.mjs` · `tests/smoke.spec.ts` (Playwright).
+- Content is edited in TypeScript files today (README "Content editing" table). Every fact must trace to one of the four primary sources listed in the README; record corrections in `docs/VERIFICATION-REPORT.md` style.
+
+## Ethical guardrails (enforced, not optional)
+1. **No AI-generated portraits or images of real people.** Photo content types require `imageAuthenticityConfirmed`. Never generate, upscale-into-existence, or "reconstruct" a face.
+2. **AI bias acknowledgment** footer strip on every page linking to `/ai-bias`; keep it.
+3. **Photo consent workflow** in `docs/PHOTO_CONSENT.md` (living subject / public figure / archival tiers). Check it before adding any photo of a person.
+4. Accessibility is WCAG 2.1 AA: skip link, alt text, `prefers-reduced-motion` in CSS **and** Framer Motion (`useReducedMotion`), `lang="es"` on Spanish content, one `<h1>` per page, 44×44 px touch targets, no autoplaying audio.
+
+## Security and config
+- Security headers + CSP live in `next.config.mjs`; add any new external host to both `images.remotePatterns` and the CSP before using it.
+- `/admin/*` uses bcrypt (`ADMIN_PASSWORD_HASH`) + HMAC-signed HttpOnly cookie (`SESSION_SECRET`, fails closed with 503 if unset) + rate limiting (Vercel KV optional, in-memory fallback).
+- Env vars: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`, `SESSION_SECRET`, optional `KV_REST_API_URL`, `KV_REST_API_TOKEN`. New ones go in `.env.example` (placeholder + comment), the README table, and `.github/workflows/ci.yml` if the build needs them.
+
+## Build conventions
+- `npm ci` (lockfile is the source of truth). `npm run dev` uses `.next/`; `npm run build`/`start` use `.next-prod/` (`NEXT_DIST_DIR`) so a prod build never corrupts the running dev server.
+- `npm run build` fails on type or lint errors; `@typescript-eslint/no-explicit-any` is an error outside `lib/sanity/schemas/`.
+- Pre-commit: husky runs `lint-staged` → `next lint --file` on staged `.ts/.tsx`.
+- Hosting target is Vercel (not yet connected). No GitHub Pages: this app has server routes.

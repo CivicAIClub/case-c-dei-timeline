@@ -49,9 +49,9 @@ A living digital archive of diversity, equity, and inclusion at **Pomfret School
 ### Setup
 
 ```bash
-git clone <repo-url>
-cd pomfret-dei
-npm install
+git clone https://github.com/CivicAIClub/case-c-dei-timeline.git
+cd case-c-dei-timeline
+npm ci                       # installs exactly what package-lock.json pins
 cp .env.example .env.local
 # edit .env.local — at minimum, set NEXT_PUBLIC_SITE_URL
 npm run dev
@@ -159,17 +159,17 @@ No secrets are committed; the `.gitignore` blocks all `.env*.local` variants.
 
 Designed for Vercel with zero config. Steps:
 
-1. Connect the GitHub repo to Vercel.
+1. Connect `CivicAIClub/case-c-dei-timeline` to Vercel (root directory `/`, framework preset Next.js).
 2. In **Project Settings → Environment Variables**, set:
    - `NEXT_PUBLIC_SITE_URL` → production domain (e.g., `https://pomfretvoices.org`)
-   - `ADMIN_USERNAME`, `ADMIN_PASSWORD` → whatever the DEI team uses for the admin tool
+   - `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH` (from `node scripts/hash-password.mjs`), `SESSION_SECRET` → for the admin tool
    - Sanity vars — only if/when the CMS is being wired
 3. Deploy.
 
 **Before first deploy:**
 - Register the production domain (DNS → Vercel's name servers or CNAME record)
 - Confirm photo rights for any hotlinked images in `public/heads/` and `public/fellows/` — see [`docs/PHOTO_CONSENT.md`](./docs/PHOTO_CONSENT.md)
-- Review [`AUDIT-REPORT.md`](./AUDIT-REPORT.md) for remaining Medium-priority items
+- Review [`docs/AUDIT-REPORT.md`](./docs/AUDIT-REPORT.md) for remaining Medium-priority items
 
 **After deploy:**
 - Verify `/robots.txt` and `/sitemap.xml` return the right production URLs
@@ -181,7 +181,7 @@ Designed for Vercel with zero config. Steps:
 ## Repository layout
 
 ```
-pomfret-dei/
+case-c-dei-timeline/
 ├── app/                        # Next.js App Router routes
 │   ├── layout.tsx              # Root layout (fonts, metadata, MotionProvider, Header, Footer)
 │   ├── page.tsx                # Homepage
@@ -216,16 +216,21 @@ pomfret-dei/
 │   └── heads/                  # 5 Head of School photos
 │
 ├── docs/
-│   └── PHOTO_CONSENT.md        # Internal photo-consent workflow
+│   ├── PHOTO_CONSENT.md        # Internal photo-consent workflow
+│   ├── AUDIT-REPORT.md         # Pre-deployment audit
+│   ├── SITE-AUDIT.md           # Design system reference
+│   ├── POMFRET-ORG-TOKENS.md   # pomfret.org design-token reference (CSS tokens, not credentials)
+│   ├── VERIFICATION-REPORT.md  # Fact-check report against source documents
+│   └── research/               # Source notes (Spirit That Is Pomfret)
 │
-├── middleware.ts               # Basic auth for /admin/*
-├── next.config.mjs             # Security headers, image remotePatterns
+├── scripts/                    # hash-password.mjs, auth-sanity.mjs
+├── tests/                      # Playwright smoke test
+├── middleware.ts               # Session-cookie auth for /admin/*
+├── next.config.mjs             # Security headers, image remotePatterns, .next-prod dist dir
 ├── tailwind.config.ts          # Pomfret brand tokens
 ├── .env.example                # Every required env var, documented
-├── AUDIT-REPORT.md             # Pre-deployment audit
-├── SITE-AUDIT.md               # Design system reference
-├── POMFRET-ORG-TOKENS.md       # pomfret.org design-token reference
-└── VERIFICATION-REPORT.md      # Fact-check report against source documents
+├── .cursor/rules/              # Committed Cursor rules (nothing to paste into your IDE)
+└── .github/workflows/ci.yml    # Install + build on every pull request
 ```
 
 ---
@@ -239,13 +244,28 @@ Every piece of content on this site is traceable back to one of four primary sou
 3. **"Pomfret in the Civil Rights Era"** (Pomfret Magazine, Fall 2005) — 14-page issue by Elizabeth Lake
 4. **"Mission Accomplished: 35 Years of Coeducation"** (Pomfret Magazine, September 2003) — 27-page issue edited by Sharon Gaudreau
 
-See [`VERIFICATION-REPORT.md`](./VERIFICATION-REPORT.md) for a claim-by-claim audit.
+See [`docs/VERIFICATION-REPORT.md`](./docs/VERIFICATION-REPORT.md) for a claim-by-claim audit.
 
 ---
 
 ## Team
 
-- **Owner:** Pomfret School DEI Department
-- **Dean of DEI:** Dr. Coretta McCarter
+- **Owner / client:** Pomfret School DEI Department — Dean of DEI, Dr. Coretta McCarter
+- **Developers (Civic AI Club, Case C):** Zahir Williams, Keke Li
+- **Club lead:** Cayden Auyang
 
 For content corrections, removal requests, or accessibility issues: email the Dean of DEI or call 860.963.6100.
+
+## Working on this repo
+
+- Branch from `main` as `feature/<short-description>`, `fix/<short-description>`, or `chore/<short-description>` (lowercase, hyphens).
+- Every change goes through a pull request with at least one approval. `main` cannot be pushed to directly. CI (`.github/workflows/ci.yml`) installs and builds every PR.
+- Never commit secrets. `.env.local` is gitignored; `.env.example` holds only placeholders.
+- `npm run build` writes to `.next-prod/` so it never clobbers the dev server's `.next/`.
+- A pre-commit hook (husky + lint-staged) runs `next lint` on staged `.ts`/`.tsx` files; `npm ci` installs it.
+- Cursor rules for this project are committed in `.cursor/rules/`. You do not need to paste anything into your IDE settings.
+- The full Git walkthrough for beginners is the club's **[Developer Onboarding Guide](https://github.com/CivicAIClub/docs/blob/main/developer-onboarding.md)**.
+
+## History
+
+This repository was split out of the club monorepo (`CivicAIClub/Civic-AI-Github-Repository`, `projects/case-c-dei-timeline/`) on 2026-09-18 with full history preserved.
