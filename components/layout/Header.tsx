@@ -1,9 +1,27 @@
+// PLAIN-ENGLISH OVERVIEW
+// This is the menu bar at the top of every page (app/layout.tsx puts it there). It is styled
+// to look like the main pomfret.org website. From top to bottom it has:
+//   - a thin red banner with the site's tagline (large screens only),
+//   - a row of small links: pomfret.org, Admissions, and an email link to the DEI office
+//     (large screens only),
+//   - the main bar: the POMFRET logo (links to the home page), the main menu with drop-down
+//     lists, and two buttons, "Explore" and "Timeline".
+// On phones and small screens the menu is replaced by a "hamburger" button (three lines) that
+// slides in a full red menu panel from the right.
+// The 'use client' line below means this part runs in the visitor's browser, because it has
+// to react to clicks and mouse movements.
 'use client';
 
+// Tools used here: a way to remember what is open (useState), fast links between pages (Link),
+// and animation helpers (m, AnimatePresence, from Framer Motion) for the sliding menu and
+// fading drop-down lists.
 import { useState } from 'react';
 import Link from 'next/link';
 import { m, AnimatePresence } from 'framer-motion';
 
+// The main menu. Each item has a page address (href) and the words shown (label). Some items
+// also have "children": the smaller links that appear in a drop-down list under them.
+// To add, remove, or rename a menu link, edit this list.
 // Matches pomfret.org's main nav structure — single-level dropdowns
 const navItems: { href: string; label: string; children?: { href: string; label: string }[] }[] = [
   {
@@ -35,6 +53,8 @@ const navItems: { href: string; label: string; children?: { href: string; label:
   { href: '/ai-bias', label: 'AI & Bias' },
 ];
 
+// The small links in the top row. "external: true" marks links that leave this website;
+// those open in a new browser tab.
 // Top utility bar — mimics pomfret.org's "MY POMFRET" / Admissions / Support row
 const utilityLinks = [
   { href: 'https://www.pomfret.org', label: 'Pomfret.org', external: true },
@@ -42,10 +62,14 @@ const utilityLinks = [
   { href: 'mailto:dei@pomfretschool.org', label: 'Contact DEI' },
 ];
 
+// The menu bar itself. It takes no inputs and gives back the whole header.
 export default function Header() {
+  // Remember two things while the visitor uses the page: whether the phone menu is open, and
+  // which drop-down list (if any) is showing on a large screen.
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
+  // Build the header. It stays pinned to the top of the screen while the visitor scrolls.
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       {/* Top announcement bar (pomfret.org-style red strip) */}
@@ -61,6 +85,8 @@ export default function Header() {
       {/* Utility bar — pomfret.org-style top row */}
       <div className="hidden lg:block bg-warm-white border-b border-mist/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-end gap-6 h-8">
+          {/* One link for each entry in utilityLinks. Outside links open in a new tab, with */}
+          {/* "noopener noreferrer", a standard safety setting for links that open a new tab. */}
           {utilityLinks.map((link) => (
             <Link
               key={link.href}
@@ -80,6 +106,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 lg:h-24">
             {/* Logo */}
+            {/* The POMFRET wordmark with a red line under it; clicking it goes home. */}
             <Link
               href="/"
               className="flex flex-col group flex-shrink-0"
@@ -96,6 +123,8 @@ export default function Header() {
 
             {/* Desktop Nav with single-level dropdowns */}
             <nav className="hidden lg:flex items-center" aria-label="Main navigation">
+              {/* One menu item per entry in navItems. Moving the mouse onto an item that has a */}
+              {/* drop-down list opens it; moving the mouse away closes it. */}
               {navItems.map((item) => (
                 <div
                   key={item.href}
@@ -108,6 +137,7 @@ export default function Header() {
                     className="px-3 xl:px-4 py-2 text-[13px] xl:text-sm font-body font-semibold text-pomfret-navy hover:text-maroon transition-colors duration-200 tracking-wide inline-flex items-center gap-1"
                   >
                     {item.label}
+                    {/* Drop-down items get a small arrow that flips upside down while open. */}
                     {item.children && (
                       <svg
                         width="10"
@@ -121,6 +151,8 @@ export default function Header() {
                       </svg>
                     )}
                   </Link>
+                  {/* The drop-down list: shown only for the item the mouse is on; it fades and */}
+                  {/* slides in and out. AnimatePresence lets it animate as it disappears, too. */}
                   <AnimatePresence>
                     {item.children && openDropdown === item.href && (
                       <m.div
@@ -148,6 +180,8 @@ export default function Header() {
 
             {/* Right: CTA buttons (pomfret.org-style Inquire/Visit/Apply) */}
             <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+              {/* Two shortcut buttons (large screens only): "Explore" goes to the archive and */}
+              {/* "Timeline" goes to the timeline. */}
               <Link
                 href="/archive"
                 className="hidden lg:inline-flex items-center px-4 py-2 text-[11px] font-body font-bold tracking-[0.15em] uppercase text-maroon border border-maroon hover:bg-maroon hover:text-warm-white transition-colors rounded-sm"
@@ -162,6 +196,9 @@ export default function Header() {
               </Link>
 
               {/* Mobile Menu Button */}
+              {/* Tapping it opens or closes the phone menu. It is at least 44 by 44 pixels */}
+              {/* so it is easy to tap. The aria- settings tell screen readers whether the menu */}
+              {/* is open and what the button will do. */}
               <button
                 className="lg:hidden min-w-[44px] min-h-[44px] p-2.5 rounded-lg hover:bg-cream transition-colors flex items-center justify-center"
                 onClick={() => setMobileOpen(!mobileOpen)}
@@ -169,6 +206,7 @@ export default function Header() {
                 aria-controls="mobile-menu"
                 aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
               >
+                {/* Three lines that turn into an "X" while the menu is open. */}
                 <div className="w-6 h-5 relative flex flex-col justify-between">
                   <span
                     className={`block h-0.5 w-6 bg-navy transition-all duration-300 ${
@@ -194,6 +232,7 @@ export default function Header() {
 
       {/* Mobile Menu — pomfret.org-style red full-panel overlay */}
       <AnimatePresence>
+        {/* Shown only while the phone menu is open; it slides in from the right edge. */}
         {mobileOpen && (
           <m.nav
             id="mobile-menu"
@@ -205,6 +244,8 @@ export default function Header() {
             aria-label="Mobile navigation"
           >
             <div className="px-6 py-8 space-y-1">
+              {/* The same main menu items as above, as big links. Tapping one closes the menu. */}
+              {/* Only the main items are listed here, not the drop-down sub-links. */}
               {navItems.map((item) => (
                 <div key={item.href}>
                   <Link
