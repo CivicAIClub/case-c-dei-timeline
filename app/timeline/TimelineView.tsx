@@ -102,6 +102,11 @@ function getYear(date: string) {
   return Number(date.slice(0, 4));
 }
 
+// The earliest and latest years on the timeline, worked out from the events themselves, so the
+// year filter always covers exactly the events that exist (adding a newer event extends it).
+const FIRST_YEAR = getYear(sortedEvents[0].date);
+const LAST_YEAR = getYear(sortedEvents[sortedEvents.length - 1].date);
+
 // The filter buttons shown above the timeline. "All" shows every event.
 const categories = ['All', 'Milestones', 'People', 'Policy Changes', 'Student Voices', 'Cultural Events', 'Leadership'];
 
@@ -334,8 +339,8 @@ export default function TimelinePage() {
   // the chosen category, the start and end years of the range, and which event's pop-up is
   // open (null means none is open).
   const [activeCategory, setActiveCategory] = useState('All');
-  const [startYear, setStartYear] = useState(1890);
-  const [endYear, setEndYear] = useState(2026);
+  const [startYear, setStartYear] = useState(FIRST_YEAR);
+  const [endYear, setEndYear] = useState(LAST_YEAR);
   const [openEvent, setOpenEvent] = useState<Event | null>(null);
 
   // Refs and state for the scroll-driven horizontal pin (desktop only).
@@ -424,7 +429,7 @@ export default function TimelinePage() {
               </h1>
               <p className="text-lg text-slate font-body leading-relaxed mb-3">
                 Explore the milestones, voices, and turning points that shaped diversity,
-                equity, and inclusion at Pomfret School — from 1890 to today.
+                equity, and inclusion at Pomfret School — from {FIRST_YEAR} to today.
               </p>
               {/* "Current Student Diversity Snapshot": four boxes of numbers typed in by hand. */}
               <div className="mt-8 max-w-3xl rounded-2xl border border-maroon/15 bg-warm-white/80 p-5 shadow-sm">
@@ -495,18 +500,18 @@ export default function TimelinePage() {
             ))}
           </div>
 
-          {/* Career span selector */}
-          {/* Two number boxes for the first and last year to include (1890 to 2026). */}
+          {/* Year range selector */}
+          {/* Two number boxes for the first and last year to include (first to last event). */}
           {/* Typing a new year updates the range, and the timeline redraws right away. */}
           <div className="flex items-center gap-4 text-sm font-body text-slate">
-            <span className="hidden sm:inline">Career Span:</span>
+            <span className="hidden sm:inline">Years:</span>
             <div className="flex items-center gap-2">
               <label htmlFor="start-year" className="sr-only">Start year</label>
               <input
                 id="start-year"
                 type="number"
-                min={1890}
-                max={2026}
+                min={FIRST_YEAR}
+                max={LAST_YEAR}
                 value={startYear}
                 onChange={(e) => setStartYear(Number(e.target.value))}
                 className="w-20 px-2 py-1 rounded-lg border border-mist bg-cream text-navy text-center"
@@ -516,8 +521,8 @@ export default function TimelinePage() {
               <input
                 id="end-year"
                 type="number"
-                min={1890}
-                max={2026}
+                min={FIRST_YEAR}
+                max={LAST_YEAR}
                 value={endYear}
                 onChange={(e) => setEndYear(Number(e.target.value))}
                 className="w-20 px-2 py-1 rounded-lg border border-mist bg-cream text-navy text-center"
