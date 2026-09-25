@@ -1,6 +1,10 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
+// The list of campus tour stops (names, web addresses, and summaries) lives in one shared
+// file, lib/data/tour-stops.ts. This page reads it so every stop is listed below.
+import { tourStops } from '@/lib/data/tour-stops';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 
@@ -128,6 +132,59 @@ export default function TourPage() {
               </ScrollReveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* TOUR STOPS: one card per stop in lib/data/tour-stops.ts, each linking to its page. */}
+      {/* Each stop page's "All Tour Stops" link brings visitors back to this list. */}
+      <section id="tour-stops" aria-labelledby="tour-stops-heading" className="scroll-mt-28 border-b border-mist bg-warm-white py-20 lg:py-28">
+        <div className="max-w-content mx-auto px-4 sm:px-6 lg:px-8">
+          <ScrollReveal>
+            <div className="max-w-3xl">
+              <div className="text-[11px] font-body font-bold tracking-[0.25em] uppercase text-maroon mb-4">
+                Campus Tour
+              </div>
+              <h2 id="tour-stops-heading" className="font-display text-[clamp(2rem,4vw,3.5rem)] leading-[1.05] text-navy">
+                All Tour Stops
+              </h2>
+              <p className="mt-5 text-base text-slate font-body leading-relaxed">
+                Open a stop to read its story in English or Spanish.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          {/* A real list (ul / li), so screen readers announce how many stops there are. */}
+          {/* The whole card is one link to /tour/<slug>, with the stop's name as its heading. */}
+          <ul className="mt-10 grid gap-px overflow-hidden rounded-sm border border-navy/10 bg-navy/10 md:grid-cols-2 lg:grid-cols-3">
+            {tourStops.map((stop, i) => (
+              <li key={stop.slug} className="bg-warm-white">
+                <ScrollReveal delay={i * 0.07} className="h-full">
+                  <Link
+                    href={`/tour/${stop.slug}`}
+                    className="group flex h-full min-h-[200px] flex-col bg-warm-white p-6 hover:bg-cream transition-colors duration-300"
+                  >
+                    {/* Stop number, such as "01" (a leading zero is added to single digits). */}
+                    <span className="font-display text-sm text-navy/35 tabular-nums" aria-hidden="true">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <h3 className="mt-6 font-display text-2xl text-navy leading-tight group-hover:text-maroon transition-colors">
+                      {stop.locationName}
+                    </h3>
+                    {/* The stop's short English summary, from the shared tour-stops file. */}
+                    <p className="mt-3 flex-1 text-sm text-slate font-body leading-relaxed">
+                      {stop.quickSummary.en}
+                    </p>
+                    <span className="mt-6 inline-flex items-center gap-2 text-sm font-body font-semibold text-maroon group-hover:gap-3 transition-all">
+                      Visit stop
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M2 7H12M12 7L8 3M12 7L8 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  </Link>
+                </ScrollReveal>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

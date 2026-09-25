@@ -11,7 +11,7 @@ A living digital archive of diversity, equity, and inclusion at **Pomfret School
 | Route | What it is |
 |---|---|
 | `/` | Auto-advancing hero slideshow + mission + signature exhibits + real voices + story feed |
-| `/timeline` | Horizontal-scroll interactive timeline of 31 DEI milestones, 1894 → 2026 |
+| `/timeline` | Horizontal-scroll interactive timeline of 53 DEI milestones, 1894 → 2026 |
 | `/humans-of-pomfret` | 17 real alumni + faculty profiles drawn from archival magazines |
 | `/humans-of-pomfret/[slug]` | Individual profile detail (dynamically pre-rendered for every person) |
 | `/humans-of-pomfret/heads-of-school` | 11 Heads of School from William E. Peck (1894) through Heather Willis Daly (2025) |
@@ -97,7 +97,7 @@ All required env vars are documented in [`.env.example`](./.env.example). Copy t
 |---|---|
 | `lib/data/profiles.ts` | Humans of Pomfret — 17 profiles |
 | `lib/data/tour-stops.ts` | Campus tour — 6 bilingual stops |
-| `app/timeline/TimelineView.tsx` | Timeline events — 31 items in the `demoEvents` array |
+| `app/timeline/TimelineView.tsx` | Timeline events — 53 items in the `demoEvents` array |
 | `app/humans-of-pomfret/heads-of-school/HeadsView.tsx` | 11 Heads of School |
 | `app/famous-figures/SchwartzFellowsView.tsx` | 36 Schwartz Fellows |
 | `app/archive/civil-rights-era/CivilRightsEraView.tsx` | 14-page magazine transcripts |
