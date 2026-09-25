@@ -1,24 +1,68 @@
 // Shared data source for Humans of Pomfret profiles.
 // Consumed by both the index page and the dynamic [slug] detail page.
 // Until Sanity CMS is wired up, edits to profile content happen here.
+//
+// PLAIN-ENGLISH OVERVIEW
+// This file is the list of people featured in the "Humans of Pomfret" part of the site.
+// Each person is one entry in the list further down, written between curly braces { ... }.
+// Pages that use this list:
+//   - /humans-of-pomfret (app/humans-of-pomfret/HumansView.tsx): the grid of profile cards,
+//     with buttons to filter by "Alum" or "Faculty".
+//   - /humans-of-pomfret/<slug> (app/humans-of-pomfret/[slug]/page.tsx): one full page per
+//     person. A page is made automatically for every entry here.
+//   - app/sitemap.ts: the list of pages handed to search engines.
+// Once the Sanity content system is connected, this information will move there (see
+// lib/sanity/schemas/) and editors won't need to touch this file.
 
+// The shape every profile must follow. A "?" after a field name means that field is optional.
+// The site refuses to build if a required field is missing or misspelled, which catches
+// mistakes early.
 export type Profile = {
+  // A unique ID for this entry. By habit it is the same as the slug. The site uses it to tell
+  // the cards apart.
   _id: string;
+  // The person's name as displayed, including titles like "PhD" if they use them.
   name: string;
+  // The end of this person's web address: lowercase words joined by hyphens. For example,
+  // 'john-irick' gives /humans-of-pomfret/john-irick. Must be unique; changing it breaks old links.
   slug: string;
+  // 'Alum' or 'Faculty'. The filter buttons on the profiles page only know these two words,
+  // so use exactly one of them, with the same capital letter.
   role: string;
+  // Optional graduation year in short form with an apostrophe, like "'65". The person's page
+  // shows it as "Class of 1965" by putting "19" in front, so it only reads correctly for
+  // classes from the 1900s. Faculty usually leave it out.
   classYear?: string;
+  // A quote from the person, including its quotation marks. The card shows the first 160 or so
+  // characters; the person's page shows it in full.
   quote: string;
+  // A paragraph about who they are and why they matter to Pomfret's story. Shown on their page.
   bio: string;
+  // The years they were at Pomfret, like '1964-1965'. Shown on the card and on their page.
   yearsAtPomfret: string;
+  // A few topic words, like 'First' or 'Coeducation'. The card shows the first three; the
+  // person's page shows all of them.
   tags: string[];
+  // Optional photo: a file path inside the public/ folder, like '/archive/portraits/...'.
+  // Leave it out if there is no real photo; the site then shows the person's initials instead.
+  // Only use genuine photos whose consent has been checked (see docs/PHOTO_CONSENT.md). Never
+  // use AI-generated pictures of real people.
   image?: string;
+  // Which original document the facts came from, e.g. 'Mission Accomplished (September 2003)'.
+  // Shown on the person's page after "Source:". Every fact on the site must trace to a source.
   source: string;
 };
 
 // Historical alumni profiles sourced from two archival magazines:
 // - "Pomfret in the Civil Rights Era: More Than Four Decades of Diversity" (Fall 2005)
 // - "Mission Accomplished: Pomfret School Celebrates 35 Years of Coeducation" (September 2003)
+// HOW TO ADD A PERSON: copy one whole entry (from its "{" line to its "}," line), paste it
+// where you want the person to appear (the cards show in this same order), and change every
+// field. Make sure the slug and _id are new and not used by anyone else.
+// HOW TO EDIT: find the person's entry below and change the text inside the quote marks.
+// Text is wrapped in either 'single' or "double" quote marks. If the text itself contains
+// that same mark, put a backslash (\) in front of it, or wrap the text in the other kind.
+// HOW TO REMOVE: delete the whole entry, from its "{" line to its "}," line.
 export const profiles: Profile[] = [
   {
     _id: 'john-irick',
@@ -262,6 +306,9 @@ export const profiles: Profile[] = [
   },
 ];
 
+// Find one person by their slug (the end of their web address). Used by the person's own
+// page. Gives back that person's entry, or nothing if no one has that slug (the page then
+// shows "not found").
 export function getProfileBySlug(slug: string): Profile | undefined {
   return profiles.find((p) => p.slug === slug);
 }

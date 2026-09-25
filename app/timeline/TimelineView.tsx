@@ -1,5 +1,22 @@
 'use client';
 
+// THE INTERACTIVE TIMELINE ("The Arc of Inclusion"), shown on the /timeline page of the site.
+// The file next to this one (app/timeline/page.tsx) sets the page's title and then simply
+// shows this component. A "component" is a reusable piece of a web page, written as a
+// function that hands back the markup (the HTML-like code) for that piece.
+// What the visitor sees, top to bottom: a heading with a student diversity snapshot, filter
+// buttons (by category and by range of years), the timeline itself, and a pop-up with the
+// full story when any event card is clicked.
+// On large screens the timeline slides sideways as the visitor scrolls down the page. On
+// phones, and for visitors whose device asks for "reduced motion," it is an ordinary strip
+// that scrolls sideways.
+// All events are typed into the demoEvents list below (53 of them); there is no database yet.
+// The 'use client' line at the top means this code runs in the visitor's browser, which is
+// needed for the clicking, filtering, and scroll animation.
+//
+// Tools used here: React's memory and measuring tools, Framer Motion (an animation library)
+// for the fades and the scroll-linked sliding, plus this site's ScrollReveal (fades a piece
+// in as you scroll to it) and Breadcrumbs (the "Home / Timeline" trail at the top).
 import { useState, useRef, useLayoutEffect } from 'react';
 import { m, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import ScrollReveal from '@/components/ui/ScrollReveal';
@@ -10,6 +27,10 @@ import Breadcrumbs from '@/components/layout/Breadcrumbs';
 //   • "Pomfret in the Civil Rights Era: More Than Four Decades of Diversity" (Fall 2005)
 //   • "Mission Accomplished: 35 Years of Coeducation" (September 2003)
 // In production, fetched from Sanity CMS
+// Each event has: an ID, a title, a date (year-month-day), a category used by the filter
+// buttons, a longer description shown in the pop-up, and "featured" (true marks key moments
+// with a gold star and a gold dot). The timeline shows events in the order they are listed
+// here; they are not sorted by date, so a few appear slightly out of year order.
 const demoEvents = [
   { _id: '1', title: 'Pomfret School Founded', date: '1894-10-03', category: 'Milestones', description: 'William E. Peck and his wife Harriet Benson Peck founded Pomfret School as an independent, Episcopal-affiliated, all-boys college preparatory boarding school. It opened on October 3, 1894 with 42 students and 6 teachers in the Main House of the Charles Grosvenor estate (formerly the Charles Grosvenor Inn). The founding faculty was largely a Peck family enterprise: William taught Latin, his brother Rev. Theodore M. Peck taught English, his cousin Rev. Florus C. Peck served as Episcopal pastor and teacher, and Harriet ran the school\'s infirmary. The Pecks\' three daughters — Esther, Rachel, and Margaret — completed the family on campus. Tuition was $600 a year plus $30 for incidentals. Most boarders came from New York, with several traveling from as far as Ohio and Illinois.', featured: true },
   { _id: '1b', title: 'Year Two: Enrollment Reaches 74', date: '1895-09-01', category: 'Milestones', description: 'Pomfret returned for its second fall with a new wooden School House built over the summer and a student body that had grown from 42 to 74. Four additional faculty were hired to keep up with the increase. By the end of year two, the school had passed beyond the experimental stage \u2014 a marker that the founding had taken hold.', featured: false },
@@ -66,8 +87,10 @@ const demoEvents = [
   { _id: '31', title: '"A Day On for Justice" — MLK Day', date: '2026-01-21', category: 'Cultural Events', description: 'Pomfret marked Martin Luther King Jr. Day with a full day of student-led workshops on civil rights, policy writing, disability equity, the racial wealth gap, and creative writing inspired by Black artists. Dean of DEI Dr. Coretta McCarter oversaw the programming.', featured: true },
 ];
 
+// The filter buttons shown above the timeline. "All" shows every event.
 const categories = ['All', 'Milestones', 'People', 'Policy Changes', 'Student Voices', 'Cultural Events', 'Leadership'];
 
+// A color for each category's small label, so visitors can tell categories apart at a glance.
 const categoryColors: Record<string, string> = {
   Milestones: 'bg-navy text-cream',
   People: 'bg-maroon text-cream',
@@ -77,6 +100,9 @@ const categoryColors: Record<string, string> = {
   Leadership: 'bg-gold text-navy-dark',
 };
 
+// getEraStyle picks a card's background and border colors from its year, so older events
+// look like aged paper (with a slight brownish "sepia" tint before 1950) and recent events
+// look crisp and white. It is given a year and hands back those style choices.
 function getEraStyle(year: number) {
   if (year < 1920) return { bg: 'bg-cream-dark', border: 'border-gold/40', sepia: true };
   if (year < 1950) return { bg: 'bg-linen', border: 'border-gold/30', sepia: true };
@@ -85,6 +111,8 @@ function getEraStyle(year: number) {
   return { bg: 'bg-white', border: 'border-navy/10', sepia: false };
 }
 
+// "Event" names the shape of one event (title, date, and so on), copied from the list above.
+// It helps the code editor catch mistakes; it does not appear on the page.
 type Event = (typeof demoEvents)[number];
 
 // One timeline card. Used by both the scroll-driven pinned track (desktop) and
@@ -96,6 +124,8 @@ type Event = (typeof demoEvents)[number];
 // dead on the track line and a short connector line bridges the gap. Cards
 // have a fixed height — clicking opens a modal with the full description, so
 // the track never reflows and the dot is never obscured.
+// It is given: the event to show, its position in the line (0, 1, 2...), what to do when it
+// is clicked ("onOpen"), and whether it should fade in when it first appears ("animateIn").
 function TimelineCard({
   event,
   index,
@@ -107,10 +137,14 @@ function TimelineCard({
   onOpen: (event: Event) => void;
   animateIn: boolean;
 }) {
+  // Work out the event's year from its date, pick its era colors, and decide whether this card
+  // sits above the line (1st, 3rd, 5th card...) or below it (2nd, 4th...), so cards alternate.
   const year = new Date(event.date).getFullYear();
   const era = getEraStyle(year);
   const isTop = index % 2 === 0;
 
+  // The card fades up into place only when animateIn is on (the phone version). Each card
+  // waits a bit longer than the one before (never more than 0.6 seconds), so they ripple in.
   return (
     <m.div
       initial={animateIn ? { opacity: 0, y: 20 } : false}
@@ -127,6 +161,7 @@ function TimelineCard({
           isTop ? 'top-0 bottom-[calc(50%+28px)]' : 'top-[calc(50%+28px)] bottom-0'
         }`}
       >
+        {/* The whole card is a button; clicking it opens this event's full-story pop-up. */}
         <button
           type="button"
           onClick={() => onOpen(event)}
@@ -136,6 +171,7 @@ function TimelineCard({
           aria-label={`${year} — ${event.title}. Click to read more.`}
         >
           <div>
+            {/* Category label, plus a gold star if the event is featured. */}
             <div className="flex items-center gap-2 mb-3">
               <span
                 className={`text-[10px] lg:text-xs px-2 py-0.5 rounded-full ${
@@ -150,6 +186,7 @@ function TimelineCard({
                 </span>
               )}
             </div>
+            {/* The year in large type, then the title (cut off after three lines). */}
             <div className="font-display text-2xl lg:text-3xl text-navy mb-2 leading-none">
               {year}
             </div>
@@ -157,6 +194,7 @@ function TimelineCard({
               {event.title}
             </h3>
           </div>
+          {/* A "Read more" hint with a small arrow. */}
           <div className="mt-4 flex items-center gap-1 text-[10px] lg:text-[11px] font-body font-semibold tracking-[0.15em] uppercase text-maroon opacity-70 group-hover:opacity-100 group-hover:gap-2 transition-all">
             Read more
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -187,8 +225,13 @@ function TimelineCard({
 }
 
 // Full-event modal — keyboard-accessible (Escape closes, click outside closes).
+// A "modal" is a pop-up window that sits on top of the page and dims everything behind it.
+// It is given the event to show (or nothing, when no card is open) and what to do to close it.
 function EventModal({ event, onClose }: { event: Event | null; onClose: () => void }) {
   // Lock body scroll and close on Escape while the modal is open.
+  // "useLayoutEffect" runs this setup the moment the pop-up appears: it stops the page behind
+  // from scrolling and starts listening for the Escape key. The "return" part undoes both when
+  // the pop-up closes, putting the page's scrolling back the way it was.
   useLayoutEffect(() => {
     if (!event) return;
     const prevOverflow = document.body.style.overflow;
@@ -203,12 +246,16 @@ function EventModal({ event, onClose }: { event: Event | null; onClose: () => vo
     };
   }, [event, onClose]);
 
+  // If no event is open, show nothing at all.
   if (!event) return null;
 
+  // Gather what the pop-up needs: the year, the era colors, and the category label color.
   const year = new Date(event.date).getFullYear();
   const era = getEraStyle(year);
   const categoryClass = categoryColors[event.category] || 'bg-mist text-slate';
 
+  // The pop-up. Clicking the dark area around it closes it. Clicking inside the white box does
+  // not, because the box stops that click from reaching the dark area behind it.
   return (
     <div
       className="fixed inset-0 z-[60] bg-navy/75 backdrop-blur-sm flex items-center justify-center p-4"
@@ -217,6 +264,7 @@ function EventModal({ event, onClose }: { event: Event | null; onClose: () => vo
       aria-labelledby="timeline-modal-title"
       onClick={onClose}
     >
+      {/* The white box, which fades in and grows slightly into view. */}
       <m.div
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -224,6 +272,7 @@ function EventModal({ event, onClose }: { event: Event | null; onClose: () => vo
         className="relative bg-warm-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Round "X" button in the corner that closes the pop-up. */}
         <button
           type="button"
           onClick={onClose}
@@ -235,6 +284,7 @@ function EventModal({ event, onClose }: { event: Event | null; onClose: () => vo
           </svg>
         </button>
 
+        {/* Top of the pop-up: category, "Featured" badge, big year, and title. */}
         <div className={`${era.bg} px-8 pt-10 pb-6 border-b border-mist ${era.sepia ? 'sepia-[.1]' : ''}`}>
           <div className="flex items-center gap-2 mb-3">
             <span className={`text-xs px-2.5 py-1 rounded-full ${categoryClass}`}>{event.category}</span>
@@ -250,6 +300,7 @@ function EventModal({ event, onClose }: { event: Event | null; onClose: () => vo
           </h2>
         </div>
 
+        {/* The full description; this area scrolls on its own if the text is long. */}
         <div className="px-8 py-6 overflow-y-auto max-h-[50vh]">
           <p className="text-base text-slate font-body leading-relaxed whitespace-pre-line">
             {event.description}
@@ -260,19 +311,31 @@ function EventModal({ event, onClose }: { event: Event | null; onClose: () => vo
   );
 }
 
+// TimelinePage is the whole timeline page. It remembers the chosen filters and which event
+// is open, works out which events to show, and draws the heading, filters, timeline, and
+// pop-up.
 export default function TimelinePage() {
+  // React "state" is the page's short-term memory; changing it redraws the page. Here it holds
+  // the chosen category, the start and end years of the range, and which event's pop-up is
+  // open (null means none is open).
   const [activeCategory, setActiveCategory] = useState('All');
   const [startYear, setStartYear] = useState(1890);
   const [endYear, setEndYear] = useState(2026);
   const [openEvent, setOpenEvent] = useState<Event | null>(null);
 
   // Refs and state for the scroll-driven horizontal pin (desktop only).
+  // "Refs" are handles that let the code reach one specific piece of the page to measure or
+  // scroll it: the tall scrolling section, the sliding strip of cards, and the phone strip.
   const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const fallbackScrollRef = useRef<HTMLDivElement>(null);
+  // "travel" is how far (in pixels) the strip of cards must slide left to reach the last card.
   const [travel, setTravel] = useState(0);
+  // Whether the visitor's device asks for reduced motion (an accessibility setting).
   const prefersReducedMotion = useReducedMotion();
 
+  // Keep only the events that match both filters: the chosen category (or "All") and the
+  // chosen range of years. This list is worked out fresh every time the page redraws.
   const filteredEvents = demoEvents.filter((event) => {
     const year = new Date(event.date).getFullYear();
     const matchCategory = activeCategory === 'All' || event.category === activeCategory;
@@ -283,8 +346,10 @@ export default function TimelinePage() {
   // Measure how far the track has to travel = trackWidth - viewportWidth.
   // Re-measures when filters change (card count) or the window resizes.
   useLayoutEffect(() => {
+    // Skip this while the page is being prepared on the server, where there is no browser window.
     if (typeof window === 'undefined') return;
 
+    // measure: compare the full width of the strip of cards with the width of the browser window.
     const measure = () => {
       if (!trackRef.current) return;
       const trackWidth = trackRef.current.scrollWidth;
@@ -292,6 +357,8 @@ export default function TimelinePage() {
       setTravel(Math.max(0, trackWidth - viewportWidth + 96)); // +96px = a little right-side breathing room
     };
 
+    // Measure once now, then again whenever the strip changes size (a ResizeObserver watches it)
+    // or the browser window is resized. The "return" part stops watching when no longer needed.
     measure();
     const ro = new ResizeObserver(measure);
     if (trackRef.current) ro.observe(trackRef.current);
@@ -303,19 +370,25 @@ export default function TimelinePage() {
   }, [filteredEvents.length]);
 
   // Scroll progress through the pinned section (0 → 1) drives the x translate.
+  // useScroll reports how far the visitor has scrolled through the tall timeline section, as a
+  // number from 0 (just arrived) to 1 (reached its end). useTransform turns that number into a
+  // sideways shift: 0 means no shift, and 1 means slid left by the full "travel" distance.
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start start', 'end end'],
   });
   const x = useTransform(scrollYProgress, [0, 1], [0, -travel]);
 
+  // Use the scroll-to-slide version unless the visitor prefers reduced motion.
   const useScrollDriven = !prefersReducedMotion;
 
+  // What the visitor sees, top to bottom.
   return (
     <div className="min-h-screen bg-warm-white">
       {/* Header */}
       <section className="py-16 lg:py-24 bg-cream texture-linen">
         <div className="max-w-content mx-auto px-4 sm:px-6 lg:px-8">
+          {/* The "Home / Timeline" trail showing where this page sits in the site. */}
           <Breadcrumbs
             trail={[
               { href: '/', label: 'Home' },
@@ -328,6 +401,7 @@ export default function TimelinePage() {
               <div className="text-[11px] font-body font-bold tracking-[0.25em] uppercase text-maroon mb-4">
                 Interactive Timeline
               </div>
+              {/* Page title and a one-sentence introduction. */}
               <h1 className="font-display text-[clamp(2rem,4vw,3.5rem)] leading-[1.05] text-navy mb-4">
                 <span className="font-bold">The Arc</span>{' '}
                 <span className="text-pomfret-gray">of Inclusion</span>
@@ -336,6 +410,7 @@ export default function TimelinePage() {
                 Explore the milestones, voices, and turning points that shaped diversity,
                 equity, and inclusion at Pomfret School — from 1890 to today.
               </p>
+              {/* "Current Student Diversity Snapshot": four boxes of numbers typed in by hand. */}
               <div className="mt-8 max-w-3xl rounded-2xl border border-maroon/15 bg-warm-white/80 p-5 shadow-sm">
                 <div className="text-[11px] font-body font-bold tracking-[0.22em] uppercase text-maroon mb-4">
                   Current Student Diversity Snapshot
@@ -367,6 +442,7 @@ export default function TimelinePage() {
                   </div>
                 </div>
               </div>
+              {/* Hint for large screens to scroll down; shown only for the sliding version. */}
               {useScrollDriven && (
                 <p className="hidden lg:flex items-center gap-2 text-sm text-slate/70 font-body mt-6">
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -385,6 +461,7 @@ export default function TimelinePage() {
         <div className="max-w-content mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {/* Category filters */}
           <div className="flex flex-wrap gap-2 mb-3" role="tablist" aria-label="Filter by category">
+            {/* One button per category. Clicking one makes it the active filter. */}
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -403,6 +480,8 @@ export default function TimelinePage() {
           </div>
 
           {/* Career span selector */}
+          {/* Two number boxes for the first and last year to include (1890 to 2026). */}
+          {/* Typing a new year updates the range, and the timeline redraws right away. */}
           <div className="flex items-center gap-4 text-sm font-body text-slate">
             <span className="hidden sm:inline">Career Span:</span>
             <div className="flex items-center gap-2">
@@ -440,6 +519,7 @@ export default function TimelinePage() {
           runs 0→1 exactly while the pinned inner is filling the viewport.
           The track inside translates x = 0 → -travel as progress advances.
           ═══════════════════════════════════════════════════════════════ */}
+      {/* This version appears only on large screens, and only when motion is allowed. */}
       {useScrollDriven && (
         <section
           ref={sectionRef}
@@ -447,18 +527,22 @@ export default function TimelinePage() {
           style={{ height: `calc(100vh + ${travel}px)` }}
           aria-label="Diversity timeline"
         >
+          {/* This inner frame "sticks" in place on screen while the visitor scrolls through */}
+          {/* the tall section around it, so the cards slide by instead of the page moving. */}
           <div className="sticky top-20 h-[calc(100vh-5rem)] overflow-hidden flex items-center bg-warm-white">
             {/* Scroll progress rail */}
             <div className="absolute top-6 left-0 right-0 px-6 lg:px-8 flex items-center gap-3 text-xs font-body text-slate/70 z-20 pointer-events-none">
               <span className="whitespace-nowrap font-semibold tracking-wider uppercase text-[11px]">
                 {filteredEvents.length} events
               </span>
+              {/* A thin bar that fills left to right as the visitor scrolls through. */}
               <div className="flex-1 h-0.5 bg-mist/60 rounded-full overflow-hidden">
                 <m.div
                   className="h-full bg-gradient-to-r from-gold via-maroon to-navy origin-left"
                   style={{ scaleX: scrollYProgress }}
                 />
               </div>
+              {/* The years of the first and last events in the current list. */}
               <span className="whitespace-nowrap text-[11px] text-slate/50">
                 {filteredEvents.length > 0 ? new Date(filteredEvents[0].date).getFullYear() : ''} →{' '}
                 {filteredEvents.length > 0 ? new Date(filteredEvents[filteredEvents.length - 1].date).getFullYear() : ''}
@@ -480,6 +564,7 @@ export default function TimelinePage() {
                 className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-gold/60 via-navy/30 to-maroon/40 pointer-events-none"
                 style={{ top: '50%' }}
               />
+              {/* One card per matching event. Clicking a card opens its pop-up. */}
               {filteredEvents.map((event, i) => (
                 <TimelineCard
                   key={event._id}
@@ -497,8 +582,11 @@ export default function TimelinePage() {
       {/* ═══════════════════════════════════════════════════════════════
           CLASSIC OVERFLOW-X SCROLL (mobile, and motion-reduced desktop)
           ═══════════════════════════════════════════════════════════════ */}
+      {/* Hidden on large screens when motion is allowed (the sliding version is used). */}
       <div className={useScrollDriven ? 'lg:hidden' : ''}>
         <div className="overflow-hidden">
+          {/* A strip that scrolls sideways by swiping or with a trackpad. Once it is selected, */}
+          {/* the left and right arrow keys move it 300 pixels at a time. */}
           <div
             ref={fallbackScrollRef}
             className="overflow-x-auto py-8 lg:py-16 px-4 sm:px-6 lg:px-8 scrollbar-thin"
@@ -511,6 +599,7 @@ export default function TimelinePage() {
               if (e.key === 'ArrowLeft') fallbackScrollRef.current.scrollLeft -= 300;
             }}
           >
+            {/* Short hint about how to move through the timeline. */}
             <div className="flex items-center gap-2 mb-6 text-xs text-slate/60 font-body">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M2 8H14M14 8L10 4M14 8L10 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -518,6 +607,7 @@ export default function TimelinePage() {
               Swipe horizontally to explore &middot; Use arrow keys to navigate
             </div>
 
+            {/* The line and the cards; in this version each card fades up as it appears. */}
             <div className="relative min-w-max flex items-stretch gap-4 pb-4 h-[540px]">
               <div
                 className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-gold/60 via-navy/30 to-maroon/40"
@@ -538,6 +628,7 @@ export default function TimelinePage() {
       </div>
 
       {/* Empty state */}
+      {/* Shown when no event matches the chosen category and years. */}
       {filteredEvents.length === 0 && (
         <div className="py-24 text-center">
           <p className="text-lg text-slate font-body">
@@ -547,6 +638,7 @@ export default function TimelinePage() {
       )}
 
       {/* Event detail modal — opens when any timeline card is clicked */}
+      {/* Hidden until openEvent holds an event; closing it sets openEvent back to empty (null). */}
       <EventModal event={openEvent} onClose={() => setOpenEvent(null)} />
     </div>
   );

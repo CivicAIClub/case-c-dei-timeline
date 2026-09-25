@@ -1,5 +1,22 @@
 'use client';
 
+// HOMEPAGE of the Pomfret Voices website: the page a visitor sees at the site's main address.
+// In Next.js (a toolkit for building websites), every folder inside app/ becomes a page, and
+// the file named page.tsx inside it is what gets shown. This file sits directly in app/, so it
+// is the front door of the whole site.
+// The page is five stacked sections, top to bottom: a full-screen photo slideshow, the mission
+// statement, cards linking to the five main exhibits, portrait cards for six key "voices,"
+// and a short list of recent stories.
+// All the words are typed directly into this file (there is no database yet). Photos come from
+// the public/heads/ folder. The shared site header and footer are wrapped around this page by
+// app/layout.tsx.
+// The 'use client' line at the very top tells Next.js to run this page in the visitor's
+// browser, which is needed because the slideshow reacts to clicks and changes on its own.
+//
+// Tools this page borrows: Framer Motion (a library that animates things on screen), Next.js's
+// Image and Link helpers (for fast-loading photos and links to other pages), React's memory
+// tools, and two of this site's own building blocks: ScrollReveal (fades a piece in as you
+// scroll to it) and SectionHeading (the big two-tone section titles).
 import { m, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -14,6 +31,8 @@ import SectionHeading from '@/components/layout/SectionHeading';
 // school's 130-year arc — from the 1894 founder on the Hilltop through the
 // first female Head of School in 2025. `imagePosition` is tuned per slide so
 // the subject's face stays visible after object-cover crops to viewport.
+// The list of four slides. Each has a headline, an italic "accent" line, a short subtitle,
+// the photo to show, which part of the photo to keep centered, and a caption naming who it is.
 const heroSlides = [
   {
     id: 0,
@@ -54,12 +73,25 @@ const heroSlides = [
   },
 ];
 
+// HeroSection builds the full-screen slideshow at the top of the homepage.
+// React idea: a page is made of "components," reusable pieces written as functions. Each one
+// hands back the markup (the HTML-like code) for its piece of the page. This one is given
+// nothing and hands back the whole slideshow section.
 function HeroSection() {
+  // "State" is React's short-term memory: a value the page remembers, and when it changes React
+  // redraws that part of the page. Here, "active" remembers which slide (0 to 3) is showing.
   const [active, setActive] = useState(0);
   // Auto-advance is off by default for users who prefer reduced motion.
   const prefersReducedMotion = useReducedMotion();
+  // "paused" remembers whether the slideshow has stopped advancing on its own. It starts paused
+  // for visitors who have turned on "reduce motion" in their device settings.
   const [paused, setPaused] = useState<boolean>(!!prefersReducedMotion);
 
+  // The automatic slide advance. "useEffect" is React's way to run a job after the page is drawn.
+  // Here the job is a timer that moves to the next slide every 6 seconds (6000 milliseconds),
+  // wrapping from the last slide back to the first. If the slideshow is paused, or the visitor
+  // prefers reduced motion, no timer is started. The "return" line stops the old timer whenever
+  // things change, so two timers never run at the same time.
   useEffect(() => {
     if (paused || prefersReducedMotion) return;
     const t = setInterval(() => {
@@ -68,8 +100,11 @@ function HeroSection() {
     return () => clearInterval(t);
   }, [paused, prefersReducedMotion]);
 
+  // Pick out the slide that is showing right now, so the text below can use its words.
   const slide = heroSlides[active];
 
+  // What the visitor sees. Hovering the mouse over the slideshow pauses it (so people can read),
+  // and moving the mouse away starts it again.
   return (
     <section
       className="relative h-[100vh] min-h-[620px] flex items-center justify-center overflow-hidden"
@@ -83,6 +118,7 @@ function HeroSection() {
       {/* Slide backgrounds — each slide cross-fades an authentic Pomfret
           photograph with a slow Ken Burns zoom for archival cinematic feel.
           Reduced-motion users get a static image, no zoom, no cross-fade. */}
+      {/* All four photos are stacked in one spot; only the active one is fully visible. */}
       {heroSlides.map((s, i) => (
         <m.div
           key={s.id}
@@ -143,6 +179,7 @@ function HeroSection() {
       </svg>
 
       {/* Carousel navigation arrows */}
+      {/* Left arrow: go back one slide (from the first slide it wraps around to the last). */}
       <button
         onClick={() => setActive((i) => (i - 1 + heroSlides.length) % heroSlides.length)}
         className="absolute left-4 lg:left-12 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-warm-white/30 text-warm-white/70 hover:text-warm-white hover:border-warm-white hover:bg-warm-white/10 transition-all flex items-center justify-center z-20"
@@ -152,6 +189,7 @@ function HeroSection() {
           <path d="M12 5L7 10L12 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
+      {/* Right arrow: go forward one slide (from the last slide it wraps back to the first). */}
       <button
         onClick={() => setActive((i) => (i + 1) % heroSlides.length)}
         className="absolute right-4 lg:right-12 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-warm-white/30 text-warm-white/70 hover:text-warm-white hover:border-warm-white hover:bg-warm-white/10 transition-all flex items-center justify-center z-20"
@@ -164,6 +202,8 @@ function HeroSection() {
 
       {/* Centered headline — swaps with slide */}
       <div className="relative z-10 text-center px-6 max-w-5xl">
+        {/* Small "Est. 1894" line. Its "key" changes with each slide, so React treats it */}
+        {/* as brand new and its fade-up animation replays every time the slide changes. */}
         <m.div
           key={`kicker-${slide.id}`}
           initial={{ opacity: 0, y: 10 }}
@@ -180,6 +220,7 @@ function HeroSection() {
           </div>
         </m.div>
 
+        {/* The big headline, with the slide's "accent" words on a second line in italics. */}
         <m.h1
           key={`headline-${slide.id}`}
           initial={{ opacity: 0, y: 20 }}
@@ -193,6 +234,7 @@ function HeroSection() {
           <span className="italic font-normal">{slide.accent}</span>
         </m.h1>
 
+        {/* The slide's subtitle, fading in a moment after the headline. */}
         <m.p
           key={`subtitle-${slide.id}`}
           initial={{ opacity: 0, y: 15 }}
@@ -224,6 +266,7 @@ function HeroSection() {
       </m.div>
 
       {/* Play/Pause control */}
+      {/* Clicking flips between paused and playing, and swaps the icon to match. */}
       <button
         onClick={() => setPaused((p) => !p)}
         className="absolute bottom-8 right-8 lg:right-12 z-20 w-11 h-11 rounded-full border border-warm-white/30 text-warm-white/70 hover:text-warm-white hover:border-warm-white transition-all flex items-center justify-center"
@@ -242,6 +285,8 @@ function HeroSection() {
       </button>
 
       {/* Carousel indicators */}
+      {/* One small bar per slide; clicking a bar jumps straight to that slide. */}
+      {/* The bar for the slide on screen is drawn longer and brighter. */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
         {heroSlides.map((s, i) => (
           <button
@@ -265,11 +310,15 @@ function HeroSection() {
 // =================================================================
 // SECTION 2: MISSION STATEMENT — Centered single-column text
 // =================================================================
+// MissionSection shows the "Our Mission" statement: a centered heading and two paragraphs
+// about what "VOICES" means and how Pomfret's community has widened since 1894. Its only
+// movement is fading in (through ScrollReveal) when the visitor scrolls down to it.
 function MissionSection() {
   return (
     <section className="py-20 lg:py-28 bg-warm-white">
       <div className="max-w-3xl mx-auto px-6 text-center">
         <ScrollReveal>
+          {/* A small "Our Mission" label, then the large heading about amplifying VOICES. */}
           <div className="text-[11px] font-body font-bold tracking-[0.3em] uppercase text-maroon mb-6">
             Our Mission
           </div>
@@ -282,6 +331,7 @@ function MissionSection() {
             </span>
           </h2>
           <div className="w-12 h-0.5 bg-maroon mx-auto mb-6" />
+          {/* Two paragraphs explaining the word VOICES and the arc of Pomfret's history. */}
           <p className="text-sm text-slate/80 font-body leading-relaxed max-w-xl mx-auto mb-5">
             <span className="font-semibold text-navy">VOICES</span> appears here with intention:
             it points to Pomfret&apos;s VOICE program and to the student voices that continue to
@@ -305,7 +355,11 @@ function MissionSection() {
 // =================================================================
 // SECTION 3: SIGNATURE EXHIBITS — 4-column card grid with images
 // =================================================================
+// SignatureExhibits shows a row of five clickable cards, one for each main part of the site
+// (timeline, profiles, magazines, campus tour, AI bias). Clicking a card opens that page.
 function SignatureExhibits() {
+  // The five exhibit cards. Each has the page it links to, a small category label, a title,
+  // a one-line summary ("meta"), and a short description.
   const exhibits = [
     {
       href: '/timeline',
@@ -344,6 +398,7 @@ function SignatureExhibits() {
     },
   ];
 
+  // Draw the section heading, then one card per exhibit.
   return (
     <section className="py-24 lg:py-32 bg-cream">
       <div className="max-w-7xl mx-auto px-6">
@@ -356,9 +411,11 @@ function SignatureExhibits() {
           </div>
         </ScrollReveal>
 
+        {/* The grid of cards. Each card fades in slightly after the one before it. */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-navy/10 rounded-sm overflow-hidden border border-navy/10">
           {exhibits.map((exhibit, i) => (
             <ScrollReveal key={exhibit.href} delay={i * 0.08}>
+              {/* The whole card is one link to the exhibit's page. */}
               <Link
                 href={exhibit.href}
                 className="group flex flex-col h-full bg-cream hover:bg-warm-white transition-colors duration-300 p-6 lg:p-7 min-h-[280px]"
@@ -368,6 +425,7 @@ function SignatureExhibits() {
                   <span className="text-[10px] font-body tracking-[0.25em] uppercase text-maroon font-semibold">
                     {exhibit.category}
                   </span>
+                  {/* Card number, such as "01 / 05" (a leading zero is added to single digits). */}
                   <span className="font-display text-xs text-navy/30 tabular-nums">
                     {String(i + 1).padStart(2, '0')} / {String(exhibits.length).padStart(2, '0')}
                   </span>
@@ -378,6 +436,7 @@ function SignatureExhibits() {
                   {exhibit.title}
                 </h3>
 
+                {/* One-line summary, such as "130 Years · 31 Events". */}
                 <div className="text-[11px] font-body text-slate/70 uppercase tracking-wider mb-4">
                   {exhibit.meta}
                 </div>
@@ -411,6 +470,8 @@ function SignatureExhibits() {
 //     surface; intentional typography, NOT a missing-photo placeholder
 // Cards link to the relevant timeline event or profile so the section
 // is a real entry point rather than decoration.
+// "type Voice" below is a checklist of the details each voice card needs. It does not show
+// anything on the page; it just lets the code editor catch typos and missing details.
 type Voice = {
   name: string;
   year: string;
@@ -424,6 +485,8 @@ type Voice = {
   tone?: 'navy' | 'maroon' | 'cream';
 };
 
+// The six voices shown on the homepage. Only one has a photo here; the rest use the lettered
+// (monogram) card design. Each card links to a profile page or to the timeline.
 const voices: Voice[] = [
   {
     name: 'John Irick',
@@ -476,9 +539,13 @@ const voices: Voice[] = [
   },
 ];
 
+// VoiceCard draws one card in the Remarkable Voices row. It is given one voice, its place in
+// the list, and how many voices there are (for the "01 / 06" counter). It hands back a card
+// that links to that person's profile or to the timeline.
 function VoiceCard({ voice, index, total }: { voice: Voice; index: number; total: number }) {
   // Build the monogram from the first two name tokens, stripping titles.
   const initials = voice.name
+    // Drop titles like "Dr." first, so the letters come from the person's actual name.
     .replace(/^(Dr\.|Lt\. Col\.|The Honorable) /, '')
     .split(' ')
     .slice(0, 2)
@@ -493,6 +560,7 @@ function VoiceCard({ voice, index, total }: { voice: Voice; index: number; total
         href={voice.href}
         className="group relative block aspect-[3/4] rounded-2xl overflow-hidden bg-pomfret-navy"
       >
+        {/* The portrait photo, which zooms in slightly when the mouse hovers over the card. */}
         <Image
           src={voice.image}
           alt={`Portrait of ${voice.name}`}
@@ -501,10 +569,13 @@ function VoiceCard({ voice, index, total }: { voice: Voice; index: number; total
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           style={{ objectPosition: voice.imagePosition ?? '50% 30%' }}
         />
+        {/* A dark fade from the bottom so the white name text stays readable over the photo. */}
         <div className="absolute inset-0 bg-gradient-to-t from-pomfret-navy/95 via-pomfret-navy/40 to-transparent" />
+        {/* Counter in the top corner, such as "04 / 06". */}
         <span className="absolute top-4 right-4 text-[10px] font-body tabular-nums text-warm-white/50">
           {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
         </span>
+        {/* Year, name, and role along the bottom of the card. */}
         <div className="absolute inset-x-0 bottom-0 p-5">
           <div className="text-[10px] font-body font-bold tracking-[0.25em] uppercase text-maroon-light mb-2">
             {voice.year}
@@ -520,6 +591,8 @@ function VoiceCard({ voice, index, total }: { voice: Voice; index: number; total
 
   // Monogram variant — large display-font initials on a brand surface.
   // Hovering reveals the quote in an overlay panel.
+  // Pick the card's colors from its "tone": cream cards get dark text, while navy and maroon
+  // cards get light text. These are only styling choices.
   const tone = voice.tone ?? 'navy';
   const surface =
     tone === 'cream'
@@ -575,6 +648,8 @@ function VoiceCard({ voice, index, total }: { voice: Voice; index: number; total
   );
 }
 
+// RemarkableVoices builds the whole "Remarkable Voices" section: a heading, a short intro,
+// an "All Profiles" link to the Humans of Pomfret page, and a row of six VoiceCards.
 function RemarkableVoices() {
   return (
     <section className="py-24 lg:py-32 bg-warm-white">
@@ -588,6 +663,7 @@ function RemarkableVoices() {
                 from the first African American graduate in 1965 to today&rsquo;s Dean of DEI.
               </p>
             </div>
+            {/* Link to the full Humans of Pomfret profiles page. */}
             <Link
               href="/humans-of-pomfret"
               className="text-[11px] font-body font-bold tracking-[0.15em] uppercase text-maroon hover:text-maroon-dark inline-flex items-center gap-2 self-start lg:self-auto"
@@ -600,6 +676,7 @@ function RemarkableVoices() {
           </div>
         </ScrollReveal>
 
+        {/* The row of six cards, each fading in a little after the previous one. */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-5">
           {voices.map((voice, i) => (
             <ScrollReveal key={voice.name} delay={i * 0.08}>
@@ -615,7 +692,11 @@ function RemarkableVoices() {
 // =================================================================
 // SECTION 5: LATEST STORIES — Blog feed style
 // =================================================================
+// LatestStories shows three short news-style story previews (category, author, date, title,
+// and a one-sentence summary). The "View All Stories" link goes to the timeline page.
+// The previews change color when hovered, but they are not links: clicking one does nothing.
 function LatestStories() {
+  // The three stories, typed in by hand.
   const stories = [
     {
       category: 'Milestone',
@@ -646,6 +727,7 @@ function LatestStories() {
         <ScrollReveal>
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between mb-16 gap-6">
             <SectionHeading bold="Pomfret" rest="Stories" />
+            {/* "View All Stories" link, which currently goes to the timeline page. */}
             <Link href="/timeline" className="text-[11px] font-body font-bold tracking-[0.15em] uppercase text-maroon hover:text-maroon-dark inline-flex items-center gap-2">
               View All Stories
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -655,6 +737,7 @@ function LatestStories() {
           </div>
         </ScrollReveal>
 
+        {/* The three story previews side by side (stacked on narrow phone screens). */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           {stories.map((story, i) => (
             <ScrollReveal key={i} delay={i * 0.1}>
@@ -684,9 +767,12 @@ function LatestStories() {
 // =================================================================
 // HOMEPAGE
 // =================================================================
+// Home is the page itself. Next.js shows whatever this "default export" hands back when
+// someone visits the site's main address. It simply stacks the five sections in order.
 export default function Home() {
   return (
     <>
+      {/* The empty "<> </>" wrapper groups the sections without adding an extra box. */}
       <HeroSection />
       <MissionSection />
       <SignatureExhibits />

@@ -2,20 +2,51 @@
 // Consumed by both the index page and the dynamic [locationSlug] detail page.
 // Stop content is bilingual (English/Spanish) per the original spec; additional
 // languages can be added by extending the LocalizedText type.
+//
+// PLAIN-ENGLISH OVERVIEW
+// This file is the list of stops on the campus tour. Each stop is meant to have a QR code
+// sign on campus; scanning it opens that stop's page on a phone, where visitors can read
+// about the place in English or Spanish.
+// Pages that use this list:
+//   - /tour/<slug> (app/tour/[locationSlug]/page.tsx and TourStopView.tsx): one page per
+//     stop, made automatically for every entry here.
+//   - app/sitemap.ts: the list of pages handed to search engines.
+// Heads up: the /tour overview page (app/tour/TourIndexView.tsx) does not read this list, and
+// the admin QR code maker (app/admin/qr-generator/QRGeneratorView.tsx) keeps its own copy of
+// the stop names and slugs. If you add, remove, or rename a stop here, update that copy too.
+// Once the Sanity content system is connected, this information will move there.
 
+// A piece of text written in two languages: 'en' for English and 'es' for Spanish. Both are
+// required. The stop page shows whichever language the visitor picks with the EN / ES
+// buttons, and marks the text's language so screen readers pronounce it correctly.
 export type LocalizedText = {
   en: string;
   es: string;
 };
 
+// The shape every tour stop must follow.
 export type TourStop = {
+  // A unique ID for this stop (currently just the numbers 1 to 6, written as text).
   _id: string;
+  // The end of this stop's web address. For example, 'jahn-rink' gives /tour/jahn-rink. This is
+  // the address printed into the QR code, so changing it breaks any signs already printed.
   slug: string;
+  // The place's name, shown at the top of the stop's page (the same in both languages).
   locationName: string;
+  // One or two sentences shown first, in both languages. The English one is also used as the
+  // page's description in search results and link previews.
   quickSummary: LocalizedText;
+  // The longer story about the place, in both languages. It stays hidden until the visitor
+  // taps to open it.
   deepDive: LocalizedText;
 };
 
+// HOW TO ADD A STOP: copy one whole entry (from its "{" line to its "}," line), paste it at
+// the end, give it a new _id and a new, unique slug, and fill in the name and both languages
+// of text. Then add the same slug and name to the QR code maker's list so a sign can be made.
+// HOW TO EDIT: change the text inside the quote marks. If the text contains the same quote
+// mark that wraps it, put a backslash (\) in front of it. Keep the English and Spanish saying
+// the same thing. (Right now every Spanish "deepDive" leaves out some of the English text.)
 export const tourStops: TourStop[] = [
   {
     _id: '1',
@@ -121,6 +152,8 @@ export const tourStops: TourStop[] = [
   },
 ];
 
+// Find one stop by its slug. Used by the stop's page. Gives back that stop, or nothing if no
+// stop has that slug (the page then shows "not found").
 export function getTourStopBySlug(slug: string): TourStop | undefined {
   return tourStops.find((s) => s.slug === slug);
 }
