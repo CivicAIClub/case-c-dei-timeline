@@ -360,12 +360,14 @@ function MissionSection() {
 function SignatureExhibits() {
   // The five exhibit cards. Each has the page it links to, a small category label, a title,
   // a one-line summary ("meta"), and a short description.
+  // The timeline card's year span (1894 to 2026) and event count are typed in by hand; when
+  // events are added to the list in app/timeline/TimelineView.tsx, update the count here too.
   const exhibits = [
     {
       href: '/timeline',
       category: 'Interactive',
       title: 'The DEI Timeline',
-      meta: '130 Years · 31 Events',
+      meta: '132 Years · 53 Events',
       description: 'From founding in 1894 to today — explore the milestones that shaped diversity at Pomfret.',
     },
     {
@@ -436,7 +438,7 @@ function SignatureExhibits() {
                   {exhibit.title}
                 </h3>
 
-                {/* One-line summary, such as "130 Years · 31 Events". */}
+                {/* One-line summary, such as "132 Years · 53 Events". */}
                 <div className="text-[11px] font-body text-slate/70 uppercase tracking-wider mb-4">
                   {exhibit.meta}
                 </div>
