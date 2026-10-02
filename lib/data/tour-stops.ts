@@ -11,9 +11,11 @@
 //   - /tour/<slug> (app/tour/[locationSlug]/page.tsx and TourStopView.tsx): one page per
 //     stop, made automatically for every entry here.
 //   - app/sitemap.ts: the list of pages handed to search engines.
-// Heads up: the /tour overview page (app/tour/TourIndexView.tsx) does not read this list, and
-// the admin QR code maker (app/admin/qr-generator/QRGeneratorView.tsx) keeps its own copy of
-// the stop names and slugs. If you add, remove, or rename a stop here, update that copy too.
+//   - /tour (app/tour/TourIndexView.tsx): the overview page, which lists every stop with a
+//     link to its page.
+//   - the admin QR code maker (app/admin/qr-generator/QRGeneratorView.tsx), which makes one
+//     QR code per stop.
+// So a stop only needs to be added, removed, or renamed here.
 // Once the Sanity content system is connected, this information will move there.
 
 // A piece of text written in two languages: 'en' for English and 'es' for Spanish. Both are
@@ -43,7 +45,7 @@ export type TourStop = {
 
 // HOW TO ADD A STOP: copy one whole entry (from its "{" line to its "}," line), paste it at
 // the end, give it a new _id and a new, unique slug, and fill in the name and both languages
-// of text. Then add the same slug and name to the QR code maker's list so a sign can be made.
+// of text. The /tour page and the QR code maker pick up the new stop on their own.
 // HOW TO EDIT: change the text inside the quote marks. If the text contains the same quote
 // mark that wraps it, put a backslash (\) in front of it. Keep the English and Spanish saying
 // the same thing. (Right now every Spanish "deepDive" leaves out some of the English text.)

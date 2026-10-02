@@ -29,8 +29,8 @@ import Breadcrumbs from '@/components/layout/Breadcrumbs';
 // In production, fetched from Sanity CMS
 // Each event has: an ID, a title, a date (year-month-day), a category used by the filter
 // buttons, a longer description shown in the pop-up, and "featured" (true marks key moments
-// with a gold star and a gold dot). The timeline shows events in the order they are listed
-// here; they are not sorted by date, so a few appear slightly out of year order.
+// with a gold star and a gold dot). The order they are listed in here doesn't matter: the
+// timeline puts them in date order before showing them (see sortedEvents below).
 const demoEvents = [
   { _id: '1', title: 'Pomfret School Founded', date: '1894-10-03', category: 'Milestones', description: 'William E. Peck and his wife Harriet Benson Peck founded Pomfret School as an independent, Episcopal-affiliated, all-boys college preparatory boarding school. It opened on October 3, 1894 with 42 students and 6 teachers in the Main House of the Charles Grosvenor estate (formerly the Charles Grosvenor Inn). The founding faculty was largely a Peck family enterprise: William taught Latin, his brother Rev. Theodore M. Peck taught English, his cousin Rev. Florus C. Peck served as Episcopal pastor and teacher, and Harriet ran the school\'s infirmary. The Pecks\' three daughters — Esther, Rachel, and Margaret — completed the family on campus. Tuition was $600 a year plus $30 for incidentals. Most boarders came from New York, with several traveling from as far as Ohio and Illinois.', featured: true },
   { _id: '1b', title: 'Year Two: Enrollment Reaches 74', date: '1895-09-01', category: 'Milestones', description: 'Pomfret returned for its second fall with a new wooden School House built over the summer and a student body that had grown from 42 to 74. Four additional faculty were hired to keep up with the increase. By the end of year two, the school had passed beyond the experimental stage \u2014 a marker that the founding had taken hold.', featured: false },
@@ -87,6 +87,26 @@ const demoEvents = [
   { _id: '31', title: '"A Day On for Justice" — MLK Day', date: '2026-01-21', category: 'Cultural Events', description: 'Pomfret marked Martin Luther King Jr. Day with a full day of student-led workshops on civil rights, policy writing, disability equity, the racial wealth gap, and creative writing inspired by Black artists. Dean of DEI Dr. Coretta McCarter oversaw the programming.', featured: true },
 ];
 
+// The same events, put in date order (earliest first) so the timeline always reads left to
+// right through time, whatever order they were typed in above. Dates are written as
+// year-month-day with leading zeros (1945-09-01), so comparing them as text puts them in
+// the right order. Events that share the same date keep the order they were typed in.
+const sortedEvents = [...demoEvents].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+// getYear is given a date like '1963-01-01' and hands back its year (1963) as a number, read
+// straight from the first four characters of the text.
+// Why not let the browser work out the date? A browser reads '1963-01-01' as midnight in
+// London time (UTC), which is still December 31, 1962 in the United States, so events on
+// January 1 would show the year before.
+function getYear(date: string) {
+  return Number(date.slice(0, 4));
+}
+
+// The earliest and latest years on the timeline, worked out from the events themselves, so the
+// year filter always covers exactly the events that exist (adding a newer event extends it).
+const FIRST_YEAR = getYear(sortedEvents[0].date);
+const LAST_YEAR = getYear(sortedEvents[sortedEvents.length - 1].date);
+
 // The filter buttons shown above the timeline. "All" shows every event.
 const categories = ['All', 'Milestones', 'People', 'Policy Changes', 'Student Voices', 'Cultural Events', 'Leadership'];
 
@@ -139,7 +159,7 @@ function TimelineCard({
 }) {
   // Work out the event's year from its date, pick its era colors, and decide whether this card
   // sits above the line (1st, 3rd, 5th card...) or below it (2nd, 4th...), so cards alternate.
-  const year = new Date(event.date).getFullYear();
+  const year = getYear(event.date);
   const era = getEraStyle(year);
   const isTop = index % 2 === 0;
 
@@ -250,7 +270,7 @@ function EventModal({ event, onClose }: { event: Event | null; onClose: () => vo
   if (!event) return null;
 
   // Gather what the pop-up needs: the year, the era colors, and the category label color.
-  const year = new Date(event.date).getFullYear();
+  const year = getYear(event.date);
   const era = getEraStyle(year);
   const categoryClass = categoryColors[event.category] || 'bg-mist text-slate';
 
@@ -319,8 +339,8 @@ export default function TimelinePage() {
   // the chosen category, the start and end years of the range, and which event's pop-up is
   // open (null means none is open).
   const [activeCategory, setActiveCategory] = useState('All');
-  const [startYear, setStartYear] = useState(1890);
-  const [endYear, setEndYear] = useState(2026);
+  const [startYear, setStartYear] = useState(FIRST_YEAR);
+  const [endYear, setEndYear] = useState(LAST_YEAR);
   const [openEvent, setOpenEvent] = useState<Event | null>(null);
 
   // Refs and state for the scroll-driven horizontal pin (desktop only).
@@ -334,10 +354,11 @@ export default function TimelinePage() {
   // Whether the visitor's device asks for reduced motion (an accessibility setting).
   const prefersReducedMotion = useReducedMotion();
 
-  // Keep only the events that match both filters: the chosen category (or "All") and the
-  // chosen range of years. This list is worked out fresh every time the page redraws.
-  const filteredEvents = demoEvents.filter((event) => {
-    const year = new Date(event.date).getFullYear();
+  // Start from the date-ordered list and keep only the events that match both filters: the
+  // chosen category (or "All") and the chosen range of years. The result stays in date order.
+  // This list is worked out fresh every time the page redraws.
+  const filteredEvents = sortedEvents.filter((event) => {
+    const year = getYear(event.date);
     const matchCategory = activeCategory === 'All' || event.category === activeCategory;
     const matchRange = year >= startYear && year <= endYear;
     return matchCategory && matchRange;
@@ -408,7 +429,7 @@ export default function TimelinePage() {
               </h1>
               <p className="text-lg text-slate font-body leading-relaxed mb-3">
                 Explore the milestones, voices, and turning points that shaped diversity,
-                equity, and inclusion at Pomfret School — from 1890 to today.
+                equity, and inclusion at Pomfret School — from {FIRST_YEAR} to today.
               </p>
               {/* "Current Student Diversity Snapshot": four boxes of numbers typed in by hand. */}
               <div className="mt-8 max-w-3xl rounded-2xl border border-maroon/15 bg-warm-white/80 p-5 shadow-sm">
@@ -479,18 +500,18 @@ export default function TimelinePage() {
             ))}
           </div>
 
-          {/* Career span selector */}
-          {/* Two number boxes for the first and last year to include (1890 to 2026). */}
+          {/* Year range selector */}
+          {/* Two number boxes for the first and last year to include (first to last event). */}
           {/* Typing a new year updates the range, and the timeline redraws right away. */}
           <div className="flex items-center gap-4 text-sm font-body text-slate">
-            <span className="hidden sm:inline">Career Span:</span>
+            <span className="hidden sm:inline">Years:</span>
             <div className="flex items-center gap-2">
               <label htmlFor="start-year" className="sr-only">Start year</label>
               <input
                 id="start-year"
                 type="number"
-                min={1890}
-                max={2026}
+                min={FIRST_YEAR}
+                max={LAST_YEAR}
                 value={startYear}
                 onChange={(e) => setStartYear(Number(e.target.value))}
                 className="w-20 px-2 py-1 rounded-lg border border-mist bg-cream text-navy text-center"
@@ -500,8 +521,8 @@ export default function TimelinePage() {
               <input
                 id="end-year"
                 type="number"
-                min={1890}
-                max={2026}
+                min={FIRST_YEAR}
+                max={LAST_YEAR}
                 value={endYear}
                 onChange={(e) => setEndYear(Number(e.target.value))}
                 className="w-20 px-2 py-1 rounded-lg border border-mist bg-cream text-navy text-center"
@@ -542,10 +563,11 @@ export default function TimelinePage() {
                   style={{ scaleX: scrollYProgress }}
                 />
               </div>
-              {/* The years of the first and last events in the current list. */}
+              {/* The years of the earliest and latest events in the current list. Because the */}
+              {/* list is in date order, those are simply its first and last events. */}
               <span className="whitespace-nowrap text-[11px] text-slate/50">
-                {filteredEvents.length > 0 ? new Date(filteredEvents[0].date).getFullYear() : ''} →{' '}
-                {filteredEvents.length > 0 ? new Date(filteredEvents[filteredEvents.length - 1].date).getFullYear() : ''}
+                {filteredEvents.length > 0 ? getYear(filteredEvents[0].date) : ''} →{' '}
+                {filteredEvents.length > 0 ? getYear(filteredEvents[filteredEvents.length - 1].date) : ''}
               </span>
             </div>
 

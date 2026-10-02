@@ -2,15 +2,12 @@
 
 import { useState } from 'react';
 import { generateQRCodeDataURL } from '@/lib/qr';
+import { tourStops } from '@/lib/data/tour-stops';
 
-const demoLocations = [
-  { slug: 'clark-memorial-chapel', name: 'Clark Memorial Chapel' },
-  { slug: 'school-house', name: 'School House' },
-  { slug: 'centennial-garden', name: 'Centennial Garden' },
-  { slug: 'jahn-rink', name: 'Jahn Rink' },
-  { slug: 'olmsted-observatory', name: 'Olmsted Observatory' },
-  { slug: 'hard-auditorium', name: 'Hard Auditorium' },
-];
+// The tour stops to make QR codes for: each stop's web address ending ("slug") and its name,
+// read from the shared list in lib/data/tour-stops.ts. A stop added there shows up here
+// automatically, so its sign can be made without editing this file.
+const demoLocations = tourStops.map((stop) => ({ slug: stop.slug, name: stop.locationName }));
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://pomfretvoices.org';
 
