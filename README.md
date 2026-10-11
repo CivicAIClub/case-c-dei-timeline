@@ -1,4 +1,8 @@
-# Pomfret Voices — DEI Digital Archive
+# Pomfret Voices: DEI Digital Archive
+
+## What this is
+
+Pomfret's Dean of DEI, Dr. Coretta McCarter, asked the Civic AI Club for a digital archive of diversity, equity and inclusion at the school. Pomfret Voices brings together an interactive timeline of DEI milestones from 1894 to 2026, profiles of alumni and faculty drawn from archival magazines, the school's Heads of School, past Schwartz Visiting Fellows, a bilingual campus tour and an AI bias awareness module. Status: to be deployed.
 
 A living digital archive of diversity, equity, and inclusion at **Pomfret School** (founded 1894, Pomfret, Connecticut). Built as a companion to the main [pomfret.org](https://www.pomfret.org) site and maintained by the Pomfret School DEI Department.
 
@@ -248,11 +252,13 @@ See [`docs/VERIFICATION-REPORT.md`](./docs/VERIFICATION-REPORT.md) for a claim-b
 
 ---
 
-## Team
+## Contributors
 
-- **Owner / client:** Pomfret School DEI Department — Dean of DEI, Dr. Coretta McCarter
-- **Developers (Civic AI Club, Case C):** Zahir Williams, Keke Li
-- **Club lead:** Cayden Auyang
+- **Keke Li:** developer; wrote most of the code
+- **Cayden Auyang:** club lead; also contributed code
+- **Zahir Williams:** developer
+
+Client: the Pomfret School DEI Department (Dean of DEI, Dr. Coretta McCarter).
 
 For content corrections, removal requests, or accessibility issues: email the Dean of DEI or call 860.963.6100.
 
