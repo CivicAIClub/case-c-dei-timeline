@@ -44,4 +44,5 @@ next-env.d.ts
 # editors / AI tools
 .vscode/settings.json
 .idea/
-.claude/
+.claude/*
+!.claude/settings.json
